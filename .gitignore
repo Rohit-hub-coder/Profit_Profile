@@ -1,1 +1,36 @@
-node_modules
+# Dependencies
+node_modules/
+*/node_modules/
+*/*/node_modules/
+
+# Environment files
+.env
+.env.*
+*.env
+!.env.example
+!*/.env.example
+
+# Production builds
+build/
+dist/
+*/build/
+*/dist/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Personal interview & local dev scripts
+INTERVIEW_PREP.md
+interview-prep/
+start-local.js
+backend/start-local.js
