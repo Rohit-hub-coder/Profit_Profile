@@ -57,6 +57,22 @@ describe("OTP Flow & Verification", () => {
     expect(entry.otp.length).toBe(6);
   });
 
+  test("POST /send-otp never returns OTP in response body when NODE_ENV=production", async () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = "production";
+    try {
+      const res = await request(app)
+        .post("/send-otp")
+        .send({ email: "prod_check@example.com" });
+
+      expect(res.body.otp).toBeUndefined();
+      expect(res.body.devOtp).toBeUndefined();
+      expect(JSON.stringify(res.body)).not.toMatch(/devOtp/i);
+    } finally {
+      process.env.NODE_ENV = originalEnv;
+    }
+  });
+
   test("POST /send-otp enforces 60-second cooldown rate limit (429)", async () => {
     // First send
     await request(app).post("/send-otp").send({ email: "cooldown@example.com" });
