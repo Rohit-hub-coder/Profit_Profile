@@ -366,8 +366,12 @@ app.post("/send-otp", sendOtpLimiter, async (req, res, next) => {
       await transporter.sendMail(mailOptions);
       res.status(200).json({ message: "OTP sent" });
     } catch (_) {
-      // In development fallback, allow test OTP without crashing
-      res.status(200).json({ message: "OTP sent (dev fallback)", devOtp: otp });
+      // In development / test fallback, allow test OTP without crashing
+      if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test") {
+        res.status(200).json({ message: "OTP sent (dev fallback)", devOtp: otp });
+      } else {
+        res.status(500).json({ error: "Failed to deliver OTP email. Please verify SMTP configuration." });
+      }
     }
   } catch (err) {
     next(err);

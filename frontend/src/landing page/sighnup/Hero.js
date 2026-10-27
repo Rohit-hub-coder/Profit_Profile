@@ -75,7 +75,11 @@ function HeroSignup() {
         setStatus("OTP sent to " + email);
         setStatusType("success");
         setVerified(false);
-        setOtp("");
+        if (data.devOtp && process.env.NODE_ENV === "development") {
+          setOtp(data.devOtp);
+        } else {
+          setOtp("");
+        }
         return true;
       } else {
         setStatus(data.error || "Failed to send OTP.");
