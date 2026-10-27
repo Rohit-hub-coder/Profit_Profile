@@ -8,7 +8,7 @@ const Holdings = () => {
   const [holdings, setHoldings] = useState([]);
   useEffect(() => {
     axios
-      .get(`${API_URL}/allholdings`)
+      .get(`${API_URL}/allholdings`, { withCredentials: true })
       .then((response) => {
         const data = response.data?.data;
 
@@ -16,7 +16,7 @@ const Holdings = () => {
           setHoldings(data);
         } else {
           console.error("Invalid response format", response.data);
-          setHoldings([]); // fallback to empty
+          setHoldings([]);
         }
       })
       .catch((error) => {

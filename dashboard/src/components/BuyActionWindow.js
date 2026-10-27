@@ -13,12 +13,16 @@ const BuyActionWindow = ({ uid }) => {
 
   const handleBuyClick = () => {
     axios
-      .post(`${API_URL}/newOrder`, {
-        name: uid,
-        qty: Number(stockQuantity),
-        price: Number(stockPrice),
-        mode: "BUY",
-      })
+      .post(
+        `${API_URL}/newOrder`,
+        {
+          name: uid,
+          qty: Number(stockQuantity),
+          price: Number(stockPrice),
+          mode: "BUY",
+        },
+        { withCredentials: true }
+      )
       .catch((err) => {
         console.error("Error creating order:", err);
       });

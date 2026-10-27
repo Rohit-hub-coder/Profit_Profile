@@ -11,7 +11,7 @@ const Positions = () => {
   useEffect(() => {
     setLoading(true);
     axios
-      .get(`${API_URL}/allpositions`)
+      .get(`${API_URL}/allpositions`, { withCredentials: true })
       .then((response) => {
         if (Array.isArray(response.data?.data)) {
           setPositions(response.data.data);
