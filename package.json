@@ -9,11 +9,13 @@
     "test:backend": "npm --prefix backend test",
     "test:frontend": "npm --prefix frontend test -- --watchAll=false",
     "test:dashboard": "npm --prefix dashboard test -- --watchAll=false",
-    "test:all": "npm run test:backend && npm run test:frontend && npm run test:dashboard",
+    "test:ml": "python -m pytest ml/tests -v",
+    "test:all": "npm run test:backend && npm run test:frontend && npm run test:dashboard && npm run test:ml",
     "start:frontend": "cross-env PORT=3000 npm --prefix frontend start",
     "start:dashboard": "cross-env PORT=3001 npm --prefix dashboard start",
     "start:backend": "cross-env PORT=3002 npm --prefix backend run start",
-    "start:all": "concurrently --names frontend,dashboard,backend -c blue,green,yellow \"npm run start:frontend\" \"npm run start:dashboard\" \"npm run start:backend\""
+    "start:ml": "python -m uvicorn ml.api.main:app --port 3003",
+    "start:all": "concurrently --names frontend,dashboard,backend,ml -c blue,green,yellow,magenta \"npm run start:frontend\" \"npm run start:dashboard\" \"npm run start:backend\" \"npm run start:ml\""
   },
   "dependencies": {
     "concurrently": "^9.2.0",

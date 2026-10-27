@@ -330,6 +330,42 @@ app.post(["/neworder", "/newOrder"], requireAuth, async (req, res, next) => {
   }
 });
 
+const ALLOWED_ML_SYMBOLS = [
+  "RELIANCE", "TCS", "INFY", "HDFCBANK", "HINDUNILVR", "ITC",
+  "SBIN", "BHARTIARTL", "TATAPOWER", "WIPRO", "M&M", "ONGC",
+  "RELIANCE.NS", "TCS.NS", "INFY.NS", "HDFCBANK.NS", "HINDUNILVR.NS", "ITC.NS",
+  "SBIN.NS", "BHARTIARTL.NS", "TATAPOWER.NS", "WIPRO.NS", "M&M.NS", "ONGC.NS",
+];
+
+// ML Forecasting Proxy endpoint (protected by session authentication)
+app.get(["/api/predict/:symbol", "/predict/:symbol"], requireAuth, async (req, res, next) => {
+  try {
+    const rawSymbol = typeof req.params.symbol === "string" ? req.params.symbol.trim().toUpperCase() : "";
+    if (!rawSymbol || !ALLOWED_ML_SYMBOLS.includes(rawSymbol)) {
+      return res.status(400).json({
+        error: `Unsupported symbol '${rawSymbol}'. Supported symbols: RELIANCE, TCS, INFY, HDFCBANK, HINDUNILVR, ITC, SBIN, BHARTIARTL, TATAPOWER, WIPRO, M&M, ONGC.`,
+      });
+    }
+
+    const mlBaseUrl = process.env.ML_API_URL || "http://localhost:3003";
+    try {
+      const mlResponse = await fetch(`${mlBaseUrl}/predict?symbol=${encodeURIComponent(rawSymbol)}`);
+      if (!mlResponse.ok) {
+        const errorText = await mlResponse.text();
+        return res.status(mlResponse.status).json({ error: errorText || "ML service error" });
+      }
+      const data = await mlResponse.json();
+      return res.json({ data });
+    } catch (fetchErr) {
+      return res.status(503).json({
+        error: "ML forecasting service is currently unavailable. Please try again later.",
+      });
+    }
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.post("/send-otp", sendOtpLimiter, async (req, res, next) => {
   try {
     const rawEmail = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
