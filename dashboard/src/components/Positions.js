@@ -1,5 +1,7 @@
-import { React, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
+
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3002";
 
 const Positions = () => {
   const [positions, setPositions] = useState([]);
@@ -7,22 +9,28 @@ const Positions = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-  axios
-    .get("http://localhost:3001/allpositions")
-    .then((response) => {
-      console.log("API response:", response.data); // ✅ Add this
+    setLoading(true);
+    axios
+      .get(`${API_URL}/allpositions`)
+      .then((response) => {
+        if (Array.isArray(response.data?.data)) {
+          setPositions(response.data.data);
+        } else {
+          console.error("Unexpected data format:", response.data);
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching positions:", err);
+        setError("Failed to load positions.");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
 
-      // Check if `response.data.data` is really an array
-      if (Array.isArray(response.data.data)) {
-        setPositions(response.data.data);
-      } else {
-        console.error("Unexpected data format:", response.data);
-      }
-    })
-    .catch((err) => {
-      console.error("Error fetching positions:", err);
-    });
-}, []);
+  if (loading) {
+    return <h4 className="title">Loading positions...</h4>;
+  }
 
   if (error) {
     return <h3 className="title error">{error}</h3>;

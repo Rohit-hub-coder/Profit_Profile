@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3002";
+
 function HeroSignup() {
   const [email, setEmail] = useState("");
   const [otpSent, setOtpSent] = useState(false);
@@ -54,7 +56,7 @@ function HeroSignup() {
     }
     setSending(true);
     try {
-      const res = await fetch("/send-otp", {
+      const res = await fetch(`${API_URL}/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -96,10 +98,10 @@ function HeroSignup() {
     }
     setVerifying(true);
     try {
-      const res = await fetch("/verify-otp", {
+      const res = await fetch(`${API_URL}/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp }),
+        body: JSON.stringify({ email, otp: otp.trim() }),
       });
       const data = await res.json();
       if (res.ok && data.verified) {
@@ -120,6 +122,7 @@ function HeroSignup() {
     setOtpSent(false);
     await sendOtp();
   };
+
   return (
     <div className="container">
       <div className="p-3 mt-5 mb-5">
@@ -133,7 +136,7 @@ function HeroSignup() {
       </div>
       <div className="row mt-5 p-3">
         <div className="col-5" style={{ marginLeft: "10%" }}>
-          <img src="images/account_open.svg" alt="Signup" />
+          <img src="/images/account_open.svg" alt="Signup" />
         </div>
         <div className="col-5">
           <form onSubmit={otpSent ? handleVerifyOtp : handleButtonClick}>
@@ -231,11 +234,11 @@ function HeroSignup() {
           </form>
           <p className="mt-4">
             By proceeding, you agree to the ProfitProfile{" "}
-            <a href="#" style={{ textDecoration: "none" }}>
+            <a href="#terms" style={{ textDecoration: "none" }}>
               terms
             </a>{" "}
             &{" "}
-            <a href="#" style={{ textDecoration: "none" }}>
+            <a href="#privacy" style={{ textDecoration: "none" }}>
               privacy policy
             </a>
           </p>

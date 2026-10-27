@@ -22,52 +22,52 @@ const Menu = () => {
               to="/"
               onClick={() => handleOptionClick(0)}
             >
-              <p className={selectedOption===0 ? activeMenuClass:menuClass}>Dashboard</p>
+              <p className={selectedOption === 0 ? activeMenuClass : menuClass}>Dashboard</p>
             </Link>
           </li>
           <li>
             <Link
               style={{ textDecoration: "none" }}
-              to="/Orders"
+              to="/orders"
               onClick={() => handleOptionClick(1)}
             >
-              <p className={selectedOption===1 ? activeMenuClass:menuClass}>Orders</p>
+              <p className={selectedOption === 1 ? activeMenuClass : menuClass}>Orders</p>
             </Link>
           </li>
           <li>
             <Link
               style={{ textDecoration: "none" }}
-              to="/Holdings"
+              to="/holdings"
               onClick={() => handleOptionClick(2)}
             >
-              <p className={selectedOption===2 ? activeMenuClass:menuClass}>Holdings</p>
+              <p className={selectedOption === 2 ? activeMenuClass : menuClass}>Holdings</p>
             </Link>
           </li>
           <li>
             <Link
               style={{ textDecoration: "none" }}
-              to="/Positions"
+              to="/positions"
               onClick={() => handleOptionClick(3)}
             >
-              <p className={selectedOption===3 ? activeMenuClass:menuClass}>Positions</p>
+              <p className={selectedOption === 3 ? activeMenuClass : menuClass}>Positions</p>
             </Link>
           </li>
           <li>
             <Link
               style={{ textDecoration: "none" }}
-              to="/Funds"
+              to="/funds"
               onClick={() => handleOptionClick(4)}
             >
-              <p className={selectedOption===4 ? activeMenuClass:menuClass}>Funds</p>
+              <p className={selectedOption === 4 ? activeMenuClass : menuClass}>Funds</p>
             </Link>
           </li>
           <li>
             <Link
               style={{ textDecoration: "none" }}
-              to="/Apps"
+              to="/apps"
               onClick={() => handleOptionClick(5)}
             >
-              <p className={selectedOption===5 ? activeMenuClass:menuClass}>Apps</p>
+              <p className={selectedOption === 5 ? activeMenuClass : menuClass}>Apps</p>
             </Link>
           </li>
         </ul>

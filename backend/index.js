@@ -115,7 +115,17 @@ app.get("/allpositions", async (req, res) => {
   }
 });
 
-app.post("/neworder", async (req, res) => {
+app.get(["/allorders", "/allOrders"], async (req, res) => {
+  try {
+    const allorders = await OrdersModel.find({}).sort({ _id: -1 });
+    res.json({ data: allorders });
+  } catch (err) {
+    console.error("Error fetching orders:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+app.post(["/neworder", "/newOrder"], async (req, res) => {
   try {
     const { name, qty, price, mode } = req.body;
     if (!name || !qty || !price || !mode) {
