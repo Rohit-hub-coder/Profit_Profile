@@ -16,6 +16,10 @@ dist/
 */build/
 */dist/
 
+# Test coverage
+coverage/
+*/coverage/
+
 # Logs
 logs/
 *.log

@@ -4,13 +4,19 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "test": "cross-env NODE_ENV=test jest --runInBand --detectOpenHandles --forceExit",
+    "test:coverage": "cross-env NODE_ENV=test jest --runInBand --coverage --detectOpenHandles --forceExit"
   },
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "cross-env": "^7.0.3",
+    "jest": "^30.5.2",
+    "mongodb-memory-server": "^11.3.0",
+    "nodemon": "^3.1.10",
+    "supertest": "^7.3.1"
   },
   "dependencies": {
     "body-parser": "^2.2.0",
