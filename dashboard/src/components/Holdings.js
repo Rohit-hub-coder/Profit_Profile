@@ -2,11 +2,13 @@ import { React, useEffect, useState } from "react";
 import axios from "axios";
 import { VerticalGraph } from "./VerticalGraph";
 
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3002";
+
 const Holdings = () => {
   const [holdings, setHoldings] = useState([]);
   useEffect(() => {
     axios
-      .get("http://localhost:3001/allholdings")
+      .get(`${API_URL}/allholdings`)
       .then((response) => {
         const data = response.data?.data;
 
@@ -41,38 +43,41 @@ const Holdings = () => {
 
       <div className="order-table">
         <table>
-          <tr>
-            <th>Instrument</th>
-            <th>Qty.</th>
-            <th>Avg. cost</th>
-            <th>LTP</th>
-            <th>Cur. val</th>
-            <th>P&L</th>
-            <th>Net chg.</th>
-            <th>Day chg.</th>
-          </tr>
+          <thead>
+            <tr>
+              <th>Instrument</th>
+              <th>Qty.</th>
+              <th>Avg. cost</th>
+              <th>LTP</th>
+              <th>Cur. val</th>
+              <th>P&L</th>
+              <th>Net chg.</th>
+              <th>Day chg.</th>
+            </tr>
+          </thead>
+          <tbody>
+            {holdings.map((stock, index) => {
+              const currentValue = stock.qty * stock.price;
+              const profitLoss = currentValue - stock.qty * stock.avg >= 0.0;
+              const profitClass = profitLoss ? "profit" : "loss";
+              const dayChangeClass = stock.isLoss ? "loss" : "profit";
 
-          {holdings.map((stock, index) => {
-            const currentValue = stock.qty * stock.price;
-            const profitLoss = currentValue - stock.qty * stock.avg >= 0.0;
-            const profitClass = profitLoss ? "profit" : "loss";
-            const dayChangeClass = stock.isLoss ? "loss" : "profit";
-
-            return (
-              <tr key={index}>
-                <td>{stock.name}</td>
-                <td>{stock.qty}</td>
-                <td>{stock.avg.toFixed(2)}</td>
-                <td>{stock.price.toFixed(2)}</td>
-                <td>{currentValue.toFixed(2)}</td>
-                <td className={profitClass}>
-                  {(currentValue - stock.avg * stock.qty).toFixed(2)}
-                </td>
-                <td className={profitClass}>{stock.net}</td>
-                <td className={dayChangeClass}>{stock.day}</td>
-              </tr>
-            );
-          })}
+              return (
+                <tr key={index}>
+                  <td>{stock.name}</td>
+                  <td>{stock.qty}</td>
+                  <td>{stock.avg.toFixed(2)}</td>
+                  <td>{stock.price.toFixed(2)}</td>
+                  <td>{currentValue.toFixed(2)}</td>
+                  <td className={profitClass}>
+                    {(currentValue - stock.avg * stock.qty).toFixed(2)}
+                  </td>
+                  <td className={profitClass}>{stock.net}</td>
+                  <td className={dayChangeClass}>{stock.day}</td>
+                </tr>
+              );
+            })}
+          </tbody>
         </table>
       </div>
 
