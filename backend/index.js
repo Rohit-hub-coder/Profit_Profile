@@ -12,13 +12,17 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const validator = require("validator");
 
-// Fail-fast if SESSION_SECRET is missing
+// Fail-fast if SESSION_SECRET is missing (allows mock secret in test mode)
 if (!process.env.SESSION_SECRET) {
-  process.stderr.write("FATAL: SESSION_SECRET environment variable is missing.\n");
-  process.exit(1);
+  if (process.env.NODE_ENV === "test") {
+    process.env.SESSION_SECRET = "test_environment_session_secret_32_chars";
+  } else {
+    process.stderr.write("FATAL: SESSION_SECRET environment variable is missing.\n");
+    process.exit(1);
+  }
 }
 
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 3002;
 const url = process.env.MONGO_URL || "mongodb://localhost:27017/profitprofile";
 
 const { HoldingsModel } = require("./models/holdings");
@@ -424,24 +428,30 @@ app.use((err, req, res, next) => {
 });
 
 // Database connection & Graceful Shutdown
-mongoose
-  .connect(url)
-  .catch((err) => {
-    process.stderr.write(`Mongo connection error: ${err.message}\n`);
-  });
-
-const server = app.listen(port, () => {});
-
-const gracefulShutdown = () => {
-  clearInterval(otpCleanupTimer);
-  server.close(() => {
-    mongoose.connection.close(false).then(() => {
-      process.exit(0);
+let server;
+if (process.env.NODE_ENV !== "test") {
+  mongoose
+    .connect(url)
+    .catch((err) => {
+      process.stderr.write(`Mongo connection error: ${err.message}\n`);
     });
-  });
-};
 
-process.on("SIGTERM", gracefulShutdown);
-process.on("SIGINT", gracefulShutdown);
+  server = app.listen(port, () => {});
+
+  const gracefulShutdown = () => {
+    clearInterval(otpCleanupTimer);
+    server.close(() => {
+      mongoose.connection.close(false).then(() => {
+        process.exit(0);
+      });
+    });
+  };
+
+  process.on("SIGTERM", gracefulShutdown);
+  process.on("SIGINT", gracefulShutdown);
+}
+
+app.otpStore = otpStore;
+app.otpCleanupTimer = otpCleanupTimer;
 
 module.exports = app;
