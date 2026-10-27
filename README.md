@@ -1,21 +1,54 @@
-# 📈 ProfitProfile: Trading & Brokerage Platform
+# 📈 ProfitProfile: Trading & Brokerage Web Application
 
-**A production-style retail trading platform — built to replicate the core workflows of modern brokerage systems, handling user authentication, portfolio tracking, and real-time order placement.**
+**An educational brokerage web application prototype demonstrating user authentication, portfolio visualization with mock market data, and order persistence to MongoDB.**
 
-[![React](https://img.shields.io/badge/Frontend-React.js-61DAFB)](https://reactjs.org/)
-[![Node.js](https://img.shields.io/badge/Backend-Express.js%205-339933)](https://expressjs.com/)
+[![Frontend Build & Test](https://img.shields.io/badge/Frontend-React%2018-61DAFB)](https://reactjs.org/)
+[![Backend](https://img.shields.io/badge/Backend-Express.js%205-339933)](https://expressjs.com/)
 [![Database](https://img.shields.io/badge/Database-MongoDB-47A248)](https://www.mongodb.com/)
-[![Material UI](https://img.shields.io/badge/UI-Material--UI-0081CB)](https://mui.com/)
+[![Backend Test Coverage](https://img.shields.io/badge/Backend%20Coverage-82.5%25%20lines-brightgreen)](#test-coverage)
 [![License](https://img.shields.io/badge/License-MIT-blue)](#license)
 
 ---
 
-### Highlights
+## Credits
 
-- **Decoupled Client Architecture** — separates the public-facing marketing/landing site from the secure, authenticated trading dashboard for optimal bundle sizing and security boundary isolation.
-- **OTP-Based Authentication Flow** — implements secure email verification via Nodemailer with in-memory temporal state and aggressive IP-based rate limiting to prevent enumeration and spam.
-- **RESTful API Backend** — unified Node.js/Express service orchestrating session management, user profiles, portfolio holdings, positions, and trade order execution.
-- **Real-Time Data Visualization** — interactive charting and asset allocation representations using `Chart.js` and `react-chartjs-2`.
+- **Original Project:** Developed by [Satyam Pandey](https://github.com/).
+- **Maintenance & Hardening:** Maintained and enhanced by **Rohit Kumar**.
+
+### What I Changed:
+- **Dashboard & Frontend Bug Fixes:**
+  - Resolved `BuyActionWindow` React Context crash (`TypeError: GeneralContext.closeBuyWindow is not a function`).
+  - Standardized API endpoints to use `REACT_APP_API_URL` instead of hardcoded `localhost` strings.
+  - Aligned dashboard routes (`/holdings`, `/positions`, `/orders`) and `/neworder` casing between client and server.
+  - Connected `Orders.js` to fetch and render live persisted trades from the backend.
+  - Fixed React Router DOM version incompatibility on frontend (`react-router-dom@6.22.2`).
+- **Security Hardening:**
+  - Enforced fail-fast server startup: backend exits immediately with status 1 if `SESSION_SECRET` is unset.
+  - Configured `express-session` with `httpOnly: true`, `sameSite: "lax"`, and conditional `secure` in production.
+  - Replaced wildcard CORS with strict origin allowlist (`http://localhost:3000`, `http://localhost:3001` or `CORS_ORIGINS`) with `credentials: true`.
+  - Added HTTP security headers with `helmet`.
+  - Implemented rate limiting on auth and OTP routes, 60-second cooldown per email, and a 5-attempt brute-force lockout on OTP verification with periodic store cleanup.
+  - Added schema validation on order payloads (`qty > 0`, `price > 0`, mode `BUY`/`SELL`).
+  - Implemented a centralized error handler returning clean JSON responses without leaking internal stack traces.
+  - Removed `console.log` noise and uninstalled dead dependency `"module-name"`.
+- **User Authentication & Data Scoping:**
+  - Added full session-based authentication (`POST /signup`, `POST /login`, `POST /logout`, `GET /me`) using `passport-local` and `passport-local-mongoose`.
+  - Protected all portfolio and order routes with `requireAuth` middleware (returning `401 Unauthorized` for unauthenticated requests).
+  - Added a `user` reference (`ObjectId`) to `Holdings`, `Positions`, and `Orders` schemas; all queries filter strictly by `req.user._id` for tenant data isolation.
+  - Auto-seeded new user accounts on signup with mock holdings and positions so accounts start with sample data.
+  - Connected landing page login and signup forms to backend auth, with redirect to dashboard on login and redirect to `/login` when unauthenticated.
+- **Configuration & Monorepo Cleanup:**
+  - Standardized application ports across root scripts, client configurations, and CORS defaults:
+    - Frontend (Landing Page): `3000`
+    - Dashboard: `3001`
+    - Backend API: `3002`
+  - Cleaned root `package.json`: removed unrelated `session` package, misplaced `passport`, and `@types/passport-local`.
+  - Unified root `.env.example` and `backend/.env.example` with identical configuration variables.
+  - Enabled clean-clone workflows with `npm run install:all`, `npm run start:all`, and `npm run test:all`.
+- **Testing & Continuous Integration:**
+  - Built an automated integration test suite in Jest and Supertest with `mongodb-memory-server` covering 19 test cases.
+  - Replaced Create React App starter tests with meaningful component render tests for frontend and dashboard.
+  - Created `.github/workflows/ci.yml` multi-job CI workflow running test and build across all three applications.
 
 ---
 
@@ -24,239 +57,200 @@
 - [Overview](#overview)
 - [Architecture](#architecture)
 - [System Components](#system-components)
-- [Diagrams](#diagrams)
-- [Design Patterns & Principles](#design-patterns--principles)
-- [Key Engineering Decisions](#key-engineering-decisions)
-- [Tech Stack](#tech-stack)
-- [API Overview](#api-overview)
+- [API Reference](#api-reference)
+- [Test Coverage](#test-coverage)
+- [Environment Variables](#environment-variables)
 - [Running Locally](#running-locally)
+- [Roadmap (Planned, Not Implemented)](#roadmap-planned-not-implemented)
+- [Screenshots](#screenshots)
 - [License](#license)
 
 ---
 
 ## Overview
 
-ProfitProfile is a comprehensive monorepo containing the end-to-end stack for a modern financial brokerage application. It is designed to handle user onboarding, multi-factor-style OTP email verification, and core trading activities including buying/selling instruments, viewing P&L on active positions, and monitoring long-term holdings. 
+ProfitProfile is a full-stack educational trading platform prototype. It allows users to register via email OTP verification, log into an authenticated dashboard, view mock portfolio holdings and positions, and place buy/sell orders that persist in a MongoDB database scoped to each user.
 
-The architecture is split into three primary layers:
-1. A **public landing platform** for onboarding and product marketing.
-2. A **secure trading dashboard** for authenticated users to manage their portfolios.
-3. A **backend API gateway** that serves as the source of truth for transactions, state, and authentication.
+> **Note on Market Data:** Stock prices, holdings, and position movements in this project are static mock data for educational and portfolio demonstration. Orders placed by the user are validated and stored in MongoDB.
+
+---
 
 ## Architecture
 
 ```mermaid
 graph TD
-    Client1[Public User]
-    Client2[Authenticated Trader]
+    User[User / Trader]
     
-    FrontEnd["Landing Page (React)<br/>:3000"]
-    Dashboard["Trading Dashboard (React + MUI)<br/>:3001"]
+    FrontEnd["Landing Page (React)<br/>Port: 3000"]
+    Dashboard["Trading Dashboard (React + MUI)<br/>Port: 3001"]
     
-    API["Backend API (Express.js)<br/>:3002<br/>Session • Rate Limit • OTP • Orders"]
+    API["Backend API (Express.js)<br/>Port: 3002<br/>Passport Session • Rate Limiter • Helmet"]
     
-    DB[(MongoDB<br/>Holdings / Positions / Orders)]
-    Mail((SMTP Email Service))
+    DB[(MongoDB<br/>Users • Holdings • Positions • Orders)]
+    SMTP((Gmail SMTP / Nodemailer))
 
-    Client1 --> FrontEnd
-    Client2 --> Dashboard
+    User -->|Public Pages & Signup| FrontEnd
+    User -->|Trading & Portfolio| Dashboard
     
-    FrontEnd -->|Signup / Verify| API
-    Dashboard -->|Orders / Portfolio| API
+    FrontEnd -->|POST /send-otp<br/>POST /verify-otp<br/>POST /signup<br/>POST /login| API
+    Dashboard -->|GET /me<br/>GET /allholdings<br/>GET /allpositions<br/>GET /allorders<br/>POST /neworder<br/>POST /logout| API
     
     API --> DB
-    API -->|Nodemailer| Mail
+    API -->|Sends OTP| SMTP
 ```
+
+---
 
 ## System Components
 
-| Component | Description | Tech | Path |
+| Component | Port | Description | Tech Stack | Directory |
+|---|---|---|---|---|
+| **Frontend** | `3000` | Public landing page, product overviews, pricing, and signup/login flows | React 18, React Router 6, Bootstrap | `/frontend` |
+| **Dashboard** | `3001` | Authenticated client interface: watchlists, portfolio tables, order placement, charts | React 18, MUI, Chart.js, React Router 6 | `/dashboard` |
+| **Backend API** | `3002` | RESTful API service: session auth, rate limiting, OTP email delivery, and user-scoped data | Node.js, Express 5, Mongoose, Passport | `/backend` |
+
+---
+
+## API Reference
+
+All protected endpoints require an active session cookie (`connect.sid`) and return `401 Unauthorized` if unauthenticated.
+
+| Method | Path | Auth Required | Description |
 |---|---|---|---|
-| 🌐 **Public Frontend** | Landing pages, pricing, products overview, and signup flow. Optimized for SEO and fast loading. | React | `/frontend` |
-| 📊 **Trading Dashboard** | The core application for logged-in users. Features order placement windows, portfolio charts, watchlists, and funds management. | React, Material UI | `/dashboard` |
-| ⚙️ **Backend API** | Handles business logic: OTP generation/verification, order persistence, position fetching, and authentication via Passport.js. | Node.js, Express, Mongoose | `/backend` |
+| `POST` | `/send-otp` | No (Rate Limited) | Sends 6-digit OTP to user's email (60s cooldown per email, 5 requests/hr IP limit) |
+| `POST` | `/verify-otp` | No (Rate Limited) | Verifies submitted OTP against in-memory store (5 attempts max before lockout) |
+| `POST` | `/signup` | No | Creates new user account after OTP verification, starts session, seeds mock portfolio |
+| `POST` | `/login` | No (Rate Limited) | Authenticates credentials with local strategy, starts session |
+| `POST` | `/logout` | Yes | Destroys session and clears cookie |
+| `GET` | `/me` | Yes | Returns `{ authenticated: true, user: { id, email } }` |
+| `GET` | `/allholdings` | Yes | Retrieves holdings scoped to `req.user._id` |
+| `GET` | `/allpositions`| Yes | Retrieves active positions scoped to `req.user._id` |
+| `GET` | `/allorders` | Yes | Retrieves executed orders scoped to `req.user._id` (sorted newest first) |
+| `POST` | `/neworder` | Yes | Validates payload (`qty > 0`, `price > 0`, `mode: BUY|SELL`) and saves order for user |
 
 ---
 
-## Diagrams
+## Test Coverage
 
-<details open>
-<summary><strong>Sequence diagram — Secure OTP Verification Flow</strong></summary>
+Backend test suite runs on **Jest**, **Supertest**, and **`mongodb-memory-server`** (no running external database required).
 
-This demonstrates the system's approach to secure user onboarding, utilizing temporal in-memory stores and rate-limiting to prevent abuse.
+Measured coverage (`npm run test:coverage` in `/backend`):
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant C as Client (Frontend)
-    participant API as Backend API
-    participant Store as In-Memory OTP Store
-    participant SMTP as Email Service
+| Metric | Measured Value | Scope |
+|---|---|---|
+| **Lines** | **82.50%** | Backend `index.js`, models, schemas |
+| **Statements** | **80.97%** | Entire backend codebase |
+| **Branches** | **70.58%** | Conditional validation & auth logic |
+| **Functions** | **70.00%** | Route handlers, middleware, utilities |
+| **Schemas & Models**| **100.00%** | `holdings.js`, `orders.js`, `positions.js`, `users.js` |
 
-    C->>API: POST /send-otp (email)
-    API->>API: Rate Limit Check (max 5/hr per IP)
-    
-    alt IP Rate Limit Exceeded
-        API-->>C: 429 Too Many Requests
-    else IP Allowed
-        API->>Store: Check for recent OTP requests
-        alt Requested < 30s ago
-            API-->>C: 429 Please wait before requesting another
-        else Allowed
-            API->>Store: Generate 6-digit OTP (5m TTL)
-            API->>SMTP: Send OTP via Nodemailer
-            SMTP-->>API: Success
-            API-->>C: 200 OTP Sent
-        end
-    end
-
-    C->>API: POST /verify-otp (email, otp)
-    API->>Store: Fetch OTP record
-    
-    alt Expired or Missing
-        API-->>C: 400 OTP Expired / Not Found
-    else Exceeded Attempts
-        API-->>C: 429 Too many wrong attempts
-    else Invalid OTP
-        API->>Store: Increment attempt counter
-        API-->>C: 400 Incorrect OTP
-    else Valid OTP
-        API->>Store: Delete OTP record (One-time use)
-        API-->>C: 200 OTP Verified
-    end
-```
-
-</details>
-
-<details open>
-<summary><strong>Class diagram — Trading Domain Model</strong></summary>
-
-The database schema is heavily denormalized for fast read access on the dashboard, prioritizing quick portfolio loads.
-
-```mermaid
-classDiagram
-    namespace TradingDomain {
-        class User {
-            +ObjectId _id
-            +string username
-            +string email
-            +string password
-            +Date createdAt
-        }
-        
-        class Holding {
-            +ObjectId _id
-            +string name
-            +number qty
-            +number avg
-            +number price
-            +string net
-            +string day
-            +boolean isLoss
-        }
-        
-        class Position {
-            +ObjectId _id
-            +string product
-            +string name
-            +number qty
-            +number avg
-            +number price
-            +string net
-            +string day
-            +boolean isLoss
-        }
-        
-        class Order {
-            +ObjectId _id
-            +string name
-            +number qty
-            +number price
-            +string mode
-        }
-    }
-
-    User "1" --> "*" Order : places
-    User "1" --> "*" Holding : owns
-    User "1" --> "*" Position : tracks
-```
-
-</details>
+Frontend and Dashboard render tests run via React Testing Library with 100% pass rate.
 
 ---
 
-## Design Patterns & Principles
+## Environment Variables
 
-| Pattern / Principle | Where it's used |
-|---|---|
-| **Decoupled UI Architecture** | Frontend (Marketing) and Dashboard (Trading App) are physically separated to reduce bundle sizes and enforce strict security perimeters. |
-| **In-Memory Temporal State** | OTP generation and validation utilize an ephemeral Map store (`Map<email, TTL>`) instead of hitting the database for transient login state. |
-| **Circuit-Breaking / Rate Limiting** | OTP generation is guarded by `express-rate-limit` to block brute-force attempts and mitigate email spam vectors. |
-| **Thick Client / Thin Server** | The backend simply provides JSON APIs; all routing, UI state, and charting logic are handled by the React dashboard. |
+Both the root `.env.example` and `backend/.env.example` templates contain:
 
-## Key Engineering Decisions
+```env
+# Server Port (Backend runs on 3002)
+PORT=3002
 
-| Decision | Problem it solves | Trade-off accepted |
-|---|---|---|
-| **Separate React apps for Landing vs. Dashboard** | Prevents unauthenticated users from downloading the heavy trading dashboard JS bundle; provides a strict security boundary. | Increases operational complexity (requires running two distinct frontend servers). |
-| **In-Memory OTP Store** | Fast, synchronous reads for OTP validation without bloating the MongoDB instance with ephemeral documents. | Ephemeral state means OTPs are lost if the Node.js server restarts during the 5-minute window. |
-| **Mongoose ODM over Raw Queries** | Provides strong schema validation for financial data (Orders, Positions, Holdings) before it hits the database. | Slight overhead compared to native MongoDB driver, but worth it for type safety. |
-| **Cookie-based Sessions** | Uses HTTP-only, secure cookies via `express-session` to prevent XSS attacks against authentication tokens. | Requires CORS configuration (`credentials: true`) and strict SameSite policies. |
+# Session Secret (Required; backend will fail-fast if unset)
+SESSION_SECRET=replace_with_a_secure_random_session_secret_min_32_chars
 
-## Tech Stack
+# Allowed CORS Origins (comma-separated, frontend on 3000, dashboard on 3001)
+CORS_ORIGINS=http://localhost:3000,http://localhost:3001
 
-| Layer | Technology |
-|---|---|
-| **Frontend (Marketing)** | React, React Router DOM |
-| **Frontend (Dashboard)** | React, Material UI (MUI), Chart.js |
-| **API Backend** | Node.js, Express.js 5 |
-| **Database** | MongoDB (Mongoose ODM) |
-| **Authentication** | Passport.js (Local Strategy), Express Session |
-| **Communication** | Axios, Cors, Body-Parser |
-| **Email Delivery** | Nodemailer |
+# MongoDB Connection URI
+MONGO_URL=mongodb+srv://<username>:<password>@cluster.mongodb.net/<database>?retryWrites=true&w=majority
 
-## API Overview
+# Nodemailer / Gmail SMTP Configuration
+# Note: EMAIL_PASS requires a 16-character Google App Password (not your account password)
+EMAIL_USER=your_email@example.com
+EMAIL_PASS=your_16_char_gmail_app_password
+```
 
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/send-otp` | Generates a 6-digit OTP and sends it via email (rate-limited) |
-| `POST` | `/verify-otp` | Validates the OTP against the in-memory store |
-| `GET` | `/allholdings` | Fetches the user's long-term stock holdings |
-| `GET` | `/allpositions` | Fetches the user's active intraday/short-term positions |
-| `POST` | `/neworder` | Executes a new buy/sell order |
+> [!IMPORTANT]
+> **Gmail SMTP Note:** Google accounts with 2-Step Verification require an **App Password** (16 characters generated at `myaccount.google.com/apppasswords`), not the personal Google account password.
+
+---
 
 ## Running Locally
 
-To run the ProfitProfile suite, you will need Node.js and MongoDB installed on your machine.
+### Prerequisites
+- Node.js (v18+ or v20 LTS recommended)
+- MongoDB instance (local or MongoDB Atlas connection URI)
 
-**1. Database Setup:**
-Ensure MongoDB is running locally on the default port `27017` or update the `.env` file in the backend.
-
-**2. Start the Backend API:**
+### 1. Installation
+Clone the repository and install all dependencies:
 ```bash
-cd backend
-npm install
-# Create a .env file with EMAIL_USER, EMAIL_PASS, SESSION_SECRET
-npm start
+git clone https://github.com/Rohit-hub-coder/profit-profile.git
+cd profit-profile
+npm run install:all
 ```
-*Runs on port 3001 (or as defined in `.env`).*
 
-**3. Start the Landing Frontend:**
+### 2. Configure Environment
+Copy `.env.example` to `backend/.env` and update credentials:
 ```bash
-cd frontend
-npm install
-npm start
+cp .env.example backend/.env
 ```
-*Runs on port 3000.*
+Ensure `SESSION_SECRET` is set to a secure string.
 
-**4. Start the Trading Dashboard:**
+### 3. Run the Monorepo
+Start all three applications concurrently:
 ```bash
-cd dashboard
-npm install
-npm start
+npm run start:all
 ```
-*Runs on port 3002.*
+
+Or run each service individually:
+```bash
+# Terminal 1: Backend API (Port 3002)
+npm run start:backend
+
+# Terminal 2: Landing Frontend (Port 3000)
+npm run start:frontend
+
+# Terminal 3: Trading Dashboard (Port 3001)
+npm run start:dashboard
+```
+
+### 4. Run the Test Suites
+```bash
+# Run all test suites across the monorepo:
+npm run test:all
+
+# Run backend tests with coverage report:
+cd backend && npm run test:coverage
+```
+
+---
+
+## Roadmap (Planned, Not Implemented)
+
+The following capabilities are prospective architectural enhancements and are not yet implemented in the current codebase:
+- [ ] LSTM-based deep learning price prediction service.
+- [ ] WebSocket-based live streaming ticker integration (replacing static mock market data).
+- [ ] OAuth 2.0 social login (Google / GitHub).
+- [ ] Redis-backed distributed session and rate-limit store.
+- [ ] Real-time order book matching engine.
+
+---
+
+## Screenshots
+
+Screenshots of the user interface are documented in the [docs/screenshots](docs/screenshots/README.md) directory:
+- Landing Page (`http://localhost:3000/`)
+- OTP Signup & Verification (`http://localhost:3000/sighnup`)
+- Login Screen (`http://localhost:3000/login`)
+- Dashboard Summary (`http://localhost:3001/`)
+- Holdings Portfolio & Asset Charts (`http://localhost:3001/holdings`)
+- Active Positions (`http://localhost:3001/positions`)
+- Order Book (`http://localhost:3001/orders`)
+- Buy / Sell Action Dialog
+
+---
 
 ## License
 
-MIT — see [LICENSE](LICENSE) for details.
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
