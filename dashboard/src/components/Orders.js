@@ -10,7 +10,7 @@ const Orders = () => {
 
   useEffect(() => {
     axios
-      .get(`${API_URL}/allorders`)
+      .get(`${API_URL}/allorders`, { withCredentials: true })
       .then((res) => {
         if (Array.isArray(res.data?.data)) {
           setOrders(res.data.data);
