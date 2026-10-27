@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 
+const BACKEND_URL = "http://localhost:3001";
+
 function HeroSignup() {
   const [email, setEmail] = useState("");
   const [otpSent, setOtpSent] = useState(false);
@@ -54,7 +56,7 @@ function HeroSignup() {
     }
     setSending(true);
     try {
-      const res = await fetch("/send-otp", {
+      const res = await fetch(`${BACKEND_URL}/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -62,16 +64,20 @@ function HeroSignup() {
       const data = await res.json();
       if (res.ok) {
         setOtpSent(true);
-        setStatus("OTP sent to " + email);
+        if (data.devOtp) {
+          setStatus(`OTP generated: ${data.devOtp} (Development Mode)`);
+          setOtp(data.devOtp); // Auto-fill in local dev for testing convenience
+        } else {
+          setStatus("OTP sent to " + email);
+        }
         setVerified(false);
-        setOtp("");
         return true;
       } else {
         setStatus(data.error || "Failed to send OTP.");
         return false;
       }
     } catch (err) {
-      setStatus("Network error when sending OTP.");
+      setStatus("Network error when connecting to server at " + BACKEND_URL);
       return false;
     } finally {
       setSending(false);
@@ -96,15 +102,15 @@ function HeroSignup() {
     }
     setVerifying(true);
     try {
-      const res = await fetch("/verify-otp", {
+      const res = await fetch(`${BACKEND_URL}/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp }),
+        body: JSON.stringify({ email, otp: otp.trim() }),
       });
       const data = await res.json();
       if (res.ok && data.verified) {
         setVerified(true);
-        setStatus("Email verified!");
+        setStatus("Email successfully verified! You can now proceed to your trading dashboard.");
       } else {
         setStatus(data.error || "Invalid OTP.");
       }
@@ -120,6 +126,7 @@ function HeroSignup() {
     setOtpSent(false);
     await sendOtp();
   };
+
   return (
     <div className="container">
       <div className="p-3 mt-5 mb-5">
@@ -133,7 +140,7 @@ function HeroSignup() {
       </div>
       <div className="row mt-5 p-3">
         <div className="col-5" style={{ marginLeft: "10%" }}>
-          <img src="images/account_open.svg" alt="Signup" />
+          <img src="/images/account_open.svg" alt="Signup" />
         </div>
         <div className="col-5">
           <form onSubmit={otpSent ? handleVerifyOtp : handleButtonClick}>
@@ -141,6 +148,7 @@ function HeroSignup() {
             <h5 className="text-muted">Or track your existing application</h5>
 
             <input
+              type="email"
               placeholder="Email@id.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -218,24 +226,35 @@ function HeroSignup() {
             )}
 
             {verified && (
-              <div className="mt-3">
-                <strong style={{ color: "green" }}>Email verified ✔</strong>
+              <div className="mt-4">
+                <div className="alert alert-success">
+                  <strong>Email verified ✔</strong>
+                </div>
+                <a
+                  href="http://localhost:3003"
+                  className="btn btn-primary fs-5"
+                  style={{ textDecoration: "none" }}
+                >
+                  Go to Trading Dashboard ↗
+                </a>
               </div>
             )}
 
             {status && (
-              <div className="mt-2">
-                <small>{status}</small>
+              <div className="mt-3">
+                <small className={verified ? "text-success fw-bold" : "text-muted"}>
+                  {status}
+                </small>
               </div>
             )}
           </form>
           <p className="mt-4">
             By proceeding, you agree to the ProfitProfile{" "}
-            <a href="#" style={{ textDecoration: "none" }}>
+            <a href="#terms" style={{ textDecoration: "none" }}>
               terms
             </a>{" "}
             &{" "}
-            <a href="#" style={{ textDecoration: "none" }}>
+            <a href="#privacy" style={{ textDecoration: "none" }}>
               privacy policy
             </a>
           </p>

@@ -12,24 +12,22 @@ function Login() {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    // Add your login logic here
-    if (useOtp) {
-      console.log("Logging in with OTP:", passwordOrOtp);
-    } else {
-      console.log("Logging in with Password:", passwordOrOtp);
-    }
+    // Redirect directly to the Trading Dashboard on port 3003
+    window.location.href = "http://localhost:3003";
   };
 
   return (
     <div className="container text-center my-5">
-      <h2 className="mb-3 fw-bold" style={{color: "#0074D9"}}>Login to ProfitProfile</h2>
+      <h2 className="mb-3 fw-bold" style={{ color: "#0074D9" }}>
+        Login to ProfitProfile
+      </h2>
       <img
-        src="./images/login.png"
+        src="/images/login.png"
         alt="ProfitProfile"
         width="10%"
         className="mb-4"
       />
-      <form onSubmit={handleLogin} style={{width: "30%", marginLeft: "35%"}}>
+      <form onSubmit={handleLogin} style={{ width: "30%", marginLeft: "35%" }}>
         <input
           type="email"
           placeholder="Email address"
@@ -54,18 +52,20 @@ function Login() {
             </label>
           </div>
         )}
-        <button type="submit" className="btn btn-primary me-2">
-          Login
-        </button>
-        {!useOtp && (
-          <button
-            type="button"
-            className="btn btn-outline-primary"
-            onClick={handleOtpToggle}
-          >
-            Login using OTP
+        <div className="d-flex justify-content-center gap-2">
+          <button type="submit" className="btn btn-primary">
+            Login to Dashboard
           </button>
-        )}
+          {!useOtp && (
+            <button
+              type="button"
+              className="btn btn-outline-primary"
+              onClick={handleOtpToggle}
+            >
+              Login using OTP
+            </button>
+          )}
+        </div>
       </form>
     </div>
   );
