@@ -3,7 +3,12 @@
 import numpy as np
 import pytest
 
-from ml.baselines import MajorityClassBaseline, PersistenceBaseline, ZeroReturnBaseline
+from ml.baselines import (
+    MajorityClassBaseline,
+    PersistenceBaseline,
+    ZeroReturnBaseline,
+    LinearBaselines,
+)
 from ml.evaluate import (
     compute_directional_metrics,
     compute_return_metrics,
@@ -93,3 +98,31 @@ def test_toy_backtest():
     res = run_toy_backtest(actual_returns, predicted_directions, fee_bps=0.0)
 
     assert res["strategy_cumulative_return_percent"] > 0.0
+
+
+def test_linear_ridge_baseline_stability():
+    """
+    Ensure Ridge return predictions remain stable, well-conditioned, and comparable
+    to the zero-return baseline on stationary feature data without explosive outliers.
+    """
+    rng = np.random.RandomState(42)
+    n_samples, window_size, n_features = 200, 30, 14
+    X_train = rng.normal(0, 1, size=(n_samples, window_size, n_features)).astype(np.float32)
+    y_train_dir = rng.binomial(1, 0.5, size=n_samples).astype(np.float32)
+    y_train_ret = rng.normal(0.0005, 0.015, size=n_samples).astype(np.float32)
+
+    X_test = rng.normal(0, 1, size=(50, window_size, n_features)).astype(np.float32)
+    y_test_ret = rng.normal(0.0005, 0.015, size=50).astype(np.float32)
+
+    baselines = LinearBaselines(random_state=42)
+    baselines.fit(X_train, y_train_dir, y_train_ret)
+    _, _, ret_preds = baselines.predict(X_test)
+
+    zero_rmse = np.sqrt(np.mean(y_test_ret**2))
+    ridge_rmse = np.sqrt(np.mean((y_test_ret - ret_preds)**2))
+
+    # Ridge RMSE should be comparable to zero return (within 2x on stationary gaussian noise)
+    # and must never explode to 4.5x due to unhandled numerical outliers
+    assert ridge_rmse < 2.0 * zero_rmse, f"Ridge RMSE exploded: {ridge_rmse} vs Zero-return {zero_rmse}"
+    assert np.isfinite(ret_preds).all()
+
