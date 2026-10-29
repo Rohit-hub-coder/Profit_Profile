@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import Forecast from "../components/Forecast";
 
@@ -74,5 +74,36 @@ describe("Forecast Component", () => {
         screen.getByText(/ML forecasting service is currently unavailable/i)
       ).toBeInTheDocument();
     });
+  });
+
+  test("renders clear informational message (not an error) when unsupported holding is selected", async () => {
+    jest.spyOn(global, "fetch").mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ data: mockPayload }),
+      })
+    );
+
+    render(<Forecast />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/₹2500.50/i)).toBeInTheDocument();
+    });
+
+    const select = screen.getByLabelText(/Select Stock:/i);
+    fireEvent.change(select, { target: { value: "SGBMAY29" } });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/No Forecast Available for SGBMAY29/i)
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/Sovereign Gold Bond May 2029 is a government debt security/i)
+      ).toBeInTheDocument();
+    });
+
+    // Ensure error banner is NOT rendered
+    expect(screen.queryByText(/Unable to load stock forecast/i)).not.toBeInTheDocument();
   });
 });

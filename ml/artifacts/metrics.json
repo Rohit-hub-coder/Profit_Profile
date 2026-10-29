@@ -1,11 +1,11 @@
 {
   "metadata": {
-    "execution_date": "2026-10-27 22:28:57 UTC",
-    "elapsed_seconds": 140.04,
+    "execution_date": "2026-10-29 12:47:58 UTC",
+    "elapsed_seconds": 13.97,
     "platform": "Windows-11-10.0.26300-SP0",
     "processor": "Intel64 Family 6 Model 154 Stepping 3, GenuineIntel",
     "python_version": "3.12.4",
-    "tensorflow_version": "2.21.0",
+    "tensorflow_version": "2.18.0",
     "tickers_count": 12,
     "tickers": [
       "RELIANCE.NS",
@@ -36,17 +36,19 @@
   },
   "overall_test_metrics": {
     "lstm": {
-      "directional_accuracy": 47.54,
+      "directional_accuracy": 47.49,
       "ci_95": [
-        46.02,
-        49.01
+        45.98,
+        48.92
       ],
-      "precision": 0.4754,
-      "recall": 0.9957,
-      "f1": 0.6435,
-      "rmse": 0.015623,
-      "mae": 0.010958,
-      "price_mape_percent": 1.1
+      "precision": 0.4752,
+      "recall": 0.9948,
+      "f1": 0.6431,
+      "rmse": 0.015254,
+      "mae": 0.010816,
+      "price_mape_percent": 1.08,
+      "up_prediction_count": 4409,
+      "up_prediction_share_percent": 99.57
     },
     "baselines": {
       "majority_class": {
@@ -58,13 +60,13 @@
         "f1": 0.4535
       },
       "logistic_regression": {
-        "directional_accuracy": 49.57,
-        "f1": 0.528
+        "directional_accuracy": 49.55,
+        "f1": 0.5295
       },
       "ridge_regression": {
-        "rmse": 0.064987,
-        "mae": 0.029399,
-        "price_mape_percent": 2.97
+        "rmse": 0.014619,
+        "mae": 0.010542,
+        "price_mape_percent": 1.06
       },
       "zero_return": {
         "rmse": 0.014428,
@@ -84,7 +86,7 @@
       }
     },
     "toy_backtest": {
-      "strategy_cumulative_return_percent": -87.37,
+      "strategy_cumulative_return_percent": -87.95,
       "buy_and_hold_return_percent": -87.51,
       "fee_per_trade_bps": 5.0
     }
@@ -98,9 +100,9 @@
         53.53
       ],
       "f1": 0.6533,
-      "rmse": 0.01398,
-      "mae": 0.009927,
-      "price_mape_percent": 0.99,
+      "rmse": 0.012791,
+      "mae": 0.009643,
+      "price_mape_percent": 0.96,
       "toy_backtest": {
         "strategy_cumulative_return_percent": -16.75,
         "buy_and_hold_return_percent": -16.75,
@@ -109,17 +111,17 @@
     },
     "TCS.NS": {
       "test_samples": 369,
-      "directional_accuracy": 44.17,
+      "directional_accuracy": 43.63,
       "ci_95": [
-        38.75,
-        48.78
+        38.21,
+        48.24
       ],
-      "f1": 0.6084,
-      "rmse": 0.021135,
-      "mae": 0.014626,
+      "f1": 0.6031,
+      "rmse": 0.021062,
+      "mae": 0.014647,
       "price_mape_percent": 1.47,
       "toy_backtest": {
-        "strategy_cumulative_return_percent": -30.16,
+        "strategy_cumulative_return_percent": -33.37,
         "buy_and_hold_return_percent": -26.79,
         "fee_per_trade_bps": 5.0
       }
@@ -132,9 +134,9 @@
         51.22
       ],
       "f1": 0.6308,
-      "rmse": 0.018475,
-      "mae": 0.013199,
-      "price_mape_percent": 1.32,
+      "rmse": 0.018357,
+      "mae": 0.013081,
+      "price_mape_percent": 1.31,
       "toy_backtest": {
         "strategy_cumulative_return_percent": -23.8,
         "buy_and_hold_return_percent": -23.8,
@@ -149,9 +151,9 @@
         49.74
       ],
       "f1": 0.618,
-      "rmse": 0.013447,
-      "mae": 0.009654,
-      "price_mape_percent": 0.97,
+      "rmse": 0.012826,
+      "mae": 0.009373,
+      "price_mape_percent": 0.94,
       "toy_backtest": {
         "strategy_cumulative_return_percent": -27.35,
         "buy_and_hold_return_percent": -27.35,
@@ -166,8 +168,8 @@
         50.68
       ],
       "f1": 0.6283,
-      "rmse": 0.013584,
-      "mae": 0.00985,
+      "rmse": 0.013642,
+      "mae": 0.009893,
       "price_mape_percent": 0.99,
       "toy_backtest": {
         "strategy_cumulative_return_percent": -22.15,
@@ -183,9 +185,9 @@
         49.86
       ],
       "f1": 0.618,
-      "rmse": 0.013274,
-      "mae": 0.009033,
-      "price_mape_percent": 0.91,
+      "rmse": 0.013067,
+      "mae": 0.008944,
+      "price_mape_percent": 0.9,
       "toy_backtest": {
         "strategy_cumulative_return_percent": -37.27,
         "buy_and_hold_return_percent": -37.27,
@@ -200,9 +202,9 @@
         57.72
       ],
       "f1": 0.6938,
-      "rmse": 0.013608,
-      "mae": 0.009546,
-      "price_mape_percent": 0.96,
+      "rmse": 0.013394,
+      "mae": 0.009435,
+      "price_mape_percent": 0.94,
       "toy_backtest": {
         "strategy_cumulative_return_percent": 18.56,
         "buy_and_hold_return_percent": 18.56,
@@ -217,9 +219,9 @@
         54.34
       ],
       "f1": 0.6655,
-      "rmse": 0.013187,
-      "mae": 0.009975,
-      "price_mape_percent": 1.0,
+      "rmse": 0.012865,
+      "mae": 0.009768,
+      "price_mape_percent": 0.98,
       "toy_backtest": {
         "strategy_cumulative_return_percent": 2.82,
         "buy_and_hold_return_percent": 2.82,
@@ -234,9 +236,9 @@
         50.95
       ],
       "f1": 0.6283,
-      "rmse": 0.014041,
-      "mae": 0.010499,
-      "price_mape_percent": 1.05,
+      "rmse": 0.013476,
+      "mae": 0.010288,
+      "price_mape_percent": 1.03,
       "toy_backtest": {
         "strategy_cumulative_return_percent": -13.32,
         "buy_and_hold_return_percent": -13.32,
@@ -251,9 +253,9 @@
         54.74
       ],
       "f1": 0.6606,
-      "rmse": 0.016509,
-      "mae": 0.011523,
-      "price_mape_percent": 1.16,
+      "rmse": 0.015758,
+      "mae": 0.011377,
+      "price_mape_percent": 1.14,
       "toy_backtest": {
         "strategy_cumulative_return_percent": -20.56,
         "buy_and_hold_return_percent": -20.56,
@@ -268,9 +270,9 @@
         52.85
       ],
       "f1": 0.6443,
-      "rmse": 0.019359,
-      "mae": 0.013778,
-      "price_mape_percent": 1.39,
+      "rmse": 0.019098,
+      "mae": 0.013615,
+      "price_mape_percent": 1.37,
       "toy_backtest": {
         "strategy_cumulative_return_percent": 1.18,
         "buy_and_hold_return_percent": -4.76,
@@ -285,9 +287,9 @@
         54.88
       ],
       "f1": 0.6679,
-      "rmse": 0.01415,
-      "mae": 0.009892,
-      "price_mape_percent": 0.99,
+      "rmse": 0.013679,
+      "mae": 0.009729,
+      "price_mape_percent": 0.97,
       "toy_backtest": {
         "strategy_cumulative_return_percent": -5.22,
         "buy_and_hold_return_percent": -5.22,

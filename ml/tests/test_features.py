@@ -108,3 +108,23 @@ def test_target_generation():
         
         assert np.isclose(actual_ret, expected_ret, atol=1e-6)
         assert actual_dir == expected_dir
+
+
+def test_zero_volume_numerical_stability():
+    """
+    Verify volume_change remains numerically stable and finite when volume is zero or near zero.
+    
+    Prevents division by zero or near-zero denominators (e.g. 1e-8) that produce ~1e15 values,
+    which previously destabilized linear Ridge regression baselines across 30-day sliding windows.
+    """
+    df = create_synthetic_ohlcv(60)
+    # Inject zero-volume day followed by typical trading volume
+    df.iloc[25, df.columns.get_loc("Volume")] = 0.0
+    df.iloc[26, df.columns.get_loc("Volume")] = 250_000.0
+
+    feat_df = compute_features(df)
+    vol_chg = feat_df["volume_change"].dropna()
+
+    assert np.isfinite(vol_chg).all(), "volume_change contains non-finite values"
+    assert (vol_chg.abs() <= 10.0).all(), f"volume_change exceeded safe bounds: max {vol_chg.abs().max()}"
+
