@@ -40,23 +40,68 @@ const SUPPORTED_SYMBOLS = [
   "ONGC",
 ];
 
+const UNSUPPORTED_HOLDINGS = {
+  SGBMAY29: {
+    name: "SGBMAY29 (Sovereign Gold Bond)",
+    reason:
+      "Sovereign Gold Bond May 2029 is a government debt security, not an equity share. It lacks continuous daily equity OHLCV market data.",
+  },
+  KPITTECH: {
+    name: "KPITTECH (KPIT Technologies)",
+    reason:
+      "KPIT Technologies underwent a corporate demerger and restructuring in 2019, lacking the continuous 8-year daily trading history required for historical benchmark evaluation.",
+  },
+  QUICKHEAL: {
+    name: "QUICKHEAL (Quick Heal Technologies)",
+    reason:
+      "Quick Heal Technologies is a lower-liquidity small-cap equity that was excluded during data discovery in favor of top liquid NIFTY-50 equities.",
+  },
+  EVEREADY: {
+    name: "EVEREADY (Eveready Industries)",
+    reason:
+      "Eveready Industries is a small-cap position excluded from the 12 liquid large-cap NIFTY equities pre-registered for this benchmark evaluation.",
+  },
+  JUBLFOOD: {
+    name: "JUBLFOOD (Jubilant FoodWorks)",
+    reason:
+      "Jubilant FoodWorks is a portfolio holding that is not part of the 12 pre-registered liquid NIFTY symbols in this benchmark study.",
+  },
+};
+
 const Forecast = () => {
   const [selectedSymbol, setSelectedSymbol] = useState("RELIANCE");
   const [forecast, setForecast] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [infoMessage, setInfoMessage] = useState(null);
 
   const fetchForecast = useCallback(
     async (symbolToFetch = selectedSymbol) => {
       setLoading(true);
       setError(null);
+      setInfoMessage(null);
+
+      // Immediately render clear informational message for known non-forecast holdings
+      if (UNSUPPORTED_HOLDINGS[symbolToFetch]) {
+        setInfoMessage(UNSUPPORTED_HOLDINGS[symbolToFetch].reason);
+        setForecast(null);
+        setLoading(false);
+        return;
+      }
+
       try {
         const response = await fetch(`${API_URL}/api/predict/${symbolToFetch}`, {
           credentials: "include",
         });
 
         if (!response.ok) {
-          if (response.status === 503) {
+          if (response.status === 400) {
+            const errData = await response.json().catch(() => ({}));
+            setInfoMessage(
+              errData.error ||
+                `No forecast is available for ${symbolToFetch}. Only the 12 liquid NIFTY benchmark stocks are supported.`
+            );
+          } else if (response.status === 503) {
             setError(
               "ML forecasting service is currently unavailable. Please ensure the Python ML service is running on port 3003."
             );
@@ -185,11 +230,20 @@ const Forecast = () => {
               fontWeight: 500,
             }}
           >
-            {SUPPORTED_SYMBOLS.map((sym) => (
-              <option key={sym} value={sym}>
-                {sym}
-              </option>
-            ))}
+            <optgroup label="Supported Liquid Equities (12)">
+              {SUPPORTED_SYMBOLS.map((sym) => (
+                <option key={sym} value={sym}>
+                  {sym}
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label="Other Portfolio Holdings (No Forecast)">
+              {Object.keys(UNSUPPORTED_HOLDINGS).map((sym) => (
+                <option key={sym} value={sym}>
+                  {sym} (No Forecast)
+                </option>
+              ))}
+            </optgroup>
           </select>
           <button
             onClick={() => fetchForecast(selectedSymbol)}
@@ -239,6 +293,32 @@ const Forecast = () => {
           }}
         >
           Loading forecast for {selectedSymbol}...
+        </div>
+      )}
+
+      {infoMessage && !loading && (
+        <div
+          className="info-state"
+          style={{
+            backgroundColor: "#e3f2fd",
+            border: "1px solid #90caf9",
+            color: "#0d47a1",
+            padding: "16px 20px",
+            borderRadius: "6px",
+            marginBottom: "20px",
+            fontSize: "14px",
+            lineHeight: "1.6",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+            <span style={{ fontSize: "18px" }}>ℹ️</span>
+            <strong style={{ fontSize: "15px" }}>No Forecast Available for {selectedSymbol}</strong>
+          </div>
+          <p style={{ margin: "0 0 10px 0" }}>{infoMessage}</p>
+          <p style={{ margin: 0, fontSize: "13px", color: "#1976d2" }}>
+            Educational forecasts are available for 12 liquid NIFTY equities with &gt;8 years of continuous trading history:
+            {" "}RELIANCE, TCS, INFY, HDFCBANK, HINDUNILVR, ITC, SBIN, BHARTIARTL, TATAPOWER, WIPRO, M&amp;M, ONGC.
+          </p>
         </div>
       )}
 
