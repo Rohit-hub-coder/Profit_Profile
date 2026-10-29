@@ -2,6 +2,7 @@ import React from "react";
 import { Route, Routes } from "react-router-dom";
 
 import Apps from "./Apps";
+import Forecast from "./Forecast";
 import Funds from "./Funds";
 import Holdings from "./Holdings";
 
@@ -25,6 +26,7 @@ const Dashboard = () => {
           <Route path="/positions" element={<Positions />} />
           <Route path="/funds" element={<Funds />} />
           <Route path="/apps" element={<Apps />} />
+          <Route path="/forecast" element={<Forecast />} />
         </Routes>
       </div>
       

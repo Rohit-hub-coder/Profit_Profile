@@ -368,3 +368,83 @@ describe("Protected Routes & Multi-Tenant Data Scoping", () => {
     expect(aliceHoldings.body.data[0]._id).not.toBe(bobHoldings.body.data[0]._id);
   });
 });
+
+
+describe("ML Forecasting Proxy Endpoint (/api/predict/:symbol)", () => {
+  let userCookie;
+
+  beforeAll(async () => {
+    const email = "mltestuser@example.com";
+    app.otpStore.set(email, {
+      otp: "123456",
+      expiresAt: Date.now() + 60000,
+      attempts: 0,
+      lastSent: Date.now(),
+      verified: true,
+    });
+    const signupRes = await request(app)
+      .post("/signup")
+      .send({ email, password: "Password123!" });
+    userCookie = signupRes.headers["set-cookie"];
+  });
+
+  test("GET /api/predict/:symbol returns 401 when unauthenticated", async () => {
+    const res = await request(app).get("/api/predict/RELIANCE");
+    expect(res.status).toBe(401);
+  });
+
+  test("GET /api/predict/:symbol returns 400 for unsupported ticker", async () => {
+    const res = await request(app)
+      .get("/api/predict/NOT_A_STOCK")
+      .set("Cookie", userCookie);
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/unsupported symbol/i);
+  });
+
+  test("GET /api/predict/:symbol returns 503 when ML service is unreachable", async () => {
+    const originalUrl = process.env.ML_API_URL;
+    process.env.ML_API_URL = "http://127.0.0.1:59999";
+    const res = await request(app)
+      .get("/api/predict/RELIANCE")
+      .set("Cookie", userCookie);
+    expect(res.status).toBe(503);
+    expect(res.body.error).toMatch(/ML forecasting service is currently unavailable/i);
+    process.env.ML_API_URL = originalUrl;
+  });
+
+  test("GET /api/predict/:symbol returns 200 when ML service returns forecast", async () => {
+    const mockPayload = {
+      symbol: "RELIANCE.NS",
+      last_price: 2500.0,
+      predicted_direction: "UP",
+      direction_probability: 0.54,
+      predicted_return: 0.005,
+      predicted_price: 2512.5,
+      confidence_score: 0.08,
+      historical_dates: ["2026-10-22", "2026-10-23"],
+      historical_prices: [2490.0, 2500.0],
+      cached: false,
+      disclaimer: "Educational forecast only — not financial advice.",
+      timestamp: new Date().toISOString(),
+    };
+
+    const fetchSpy = jest.spyOn(global, "fetch").mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(mockPayload),
+      })
+    );
+
+    const res = await request(app)
+      .get("/api/predict/RELIANCE")
+      .set("Cookie", userCookie);
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.symbol).toBe("RELIANCE.NS");
+    expect(res.body.data.predicted_direction).toBe("UP");
+    expect(res.body.data.predicted_price).toBe(2512.5);
+
+    fetchSpy.mockRestore();
+  });
+});

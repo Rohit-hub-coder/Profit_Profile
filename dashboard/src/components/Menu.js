@@ -70,6 +70,15 @@ const Menu = () => {
               <p className={selectedOption === 5 ? activeMenuClass : menuClass}>Apps</p>
             </Link>
           </li>
+          <li>
+            <Link
+              style={{ textDecoration: "none" }}
+              to="/forecast"
+              onClick={() => handleOptionClick(6)}
+            >
+              <p className={selectedOption === 6 ? activeMenuClass : menuClass}>Forecast</p>
+            </Link>
+          </li>
         </ul>
       </div>
     </div>

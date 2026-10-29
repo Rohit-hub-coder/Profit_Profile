@@ -18,5 +18,6 @@ describe("Menu Component", () => {
     expect(screen.getByText(/Positions/i)).toBeInTheDocument();
     expect(screen.getByText(/Funds/i)).toBeInTheDocument();
     expect(screen.getByText(/Apps/i)).toBeInTheDocument();
+    expect(screen.getByText(/Forecast/i)).toBeInTheDocument();
   });
 });
