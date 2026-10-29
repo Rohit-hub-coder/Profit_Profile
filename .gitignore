@@ -38,3 +38,16 @@ INTERVIEW_PREP.md
 interview-prep/
 start-local.js
 backend/start-local.js
+
+# Python virtual environments & bytecode
+.venv/
+venv/
+__pycache__/
+*/__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+*/.pytest_cache/
+
+# ML cached data (never commit raw data)
+ml/data/

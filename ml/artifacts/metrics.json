@@ -1,0 +1,386 @@
+{
+  "metadata": {
+    "execution_date": "2026-10-29 12:47:58 UTC",
+    "elapsed_seconds": 13.97,
+    "platform": "Windows-11-10.0.26300-SP0",
+    "processor": "Intel64 Family 6 Model 154 Stepping 3, GenuineIntel",
+    "python_version": "3.12.4",
+    "tensorflow_version": "2.18.0",
+    "tickers_count": 12,
+    "tickers": [
+      "RELIANCE.NS",
+      "TCS.NS",
+      "INFY.NS",
+      "HDFCBANK.NS",
+      "HINDUNILVR.NS",
+      "ITC.NS",
+      "SBIN.NS",
+      "BHARTIARTL.NS",
+      "TATAPOWER.NS",
+      "WIPRO.NS",
+      "M&M.NS",
+      "ONGC.NS"
+    ],
+    "train_samples": 21900,
+    "val_samples": 4416,
+    "test_samples": 4428,
+    "train_cutoff_date": "2023-08-02",
+    "val_cutoff_date": "2025-03-12",
+    "window_size": 30,
+    "best_hyperparameters": {
+      "units": 32,
+      "num_layers": 1,
+      "learning_rate": 0.001,
+      "dropout_rate": 0.2
+    }
+  },
+  "overall_test_metrics": {
+    "lstm": {
+      "directional_accuracy": 47.49,
+      "ci_95": [
+        45.98,
+        48.92
+      ],
+      "precision": 0.4752,
+      "recall": 0.9948,
+      "f1": 0.6431,
+      "rmse": 0.015254,
+      "mae": 0.010816,
+      "price_mape_percent": 1.08,
+      "up_prediction_count": 4409,
+      "up_prediction_share_percent": 99.57
+    },
+    "baselines": {
+      "majority_class": {
+        "directional_accuracy": 47.56,
+        "f1": 0.6446
+      },
+      "persistence": {
+        "directional_accuracy": 49.32,
+        "f1": 0.4535
+      },
+      "logistic_regression": {
+        "directional_accuracy": 49.55,
+        "f1": 0.5295
+      },
+      "ridge_regression": {
+        "rmse": 0.014619,
+        "mae": 0.010542,
+        "price_mape_percent": 1.06
+      },
+      "zero_return": {
+        "rmse": 0.014428,
+        "mae": 0.010353,
+        "price_mape_percent": 1.04
+      }
+    },
+    "comparison": {
+      "beats_majority_baseline": false,
+      "beats_persistence_baseline": false,
+      "beats_linear_baseline": false,
+      "beats_zero_return_rmse": false,
+      "within_confidence_interval": {
+        "majority": true,
+        "persistence": false,
+        "logistic_regression": false
+      }
+    },
+    "toy_backtest": {
+      "strategy_cumulative_return_percent": -87.95,
+      "buy_and_hold_return_percent": -87.51,
+      "fee_per_trade_bps": 5.0
+    }
+  },
+  "per_symbol_metrics": {
+    "RELIANCE.NS": {
+      "test_samples": 369,
+      "directional_accuracy": 48.51,
+      "ci_95": [
+        43.49,
+        53.53
+      ],
+      "f1": 0.6533,
+      "rmse": 0.012791,
+      "mae": 0.009643,
+      "price_mape_percent": 0.96,
+      "toy_backtest": {
+        "strategy_cumulative_return_percent": -16.75,
+        "buy_and_hold_return_percent": -16.75,
+        "fee_per_trade_bps": 5.0
+      }
+    },
+    "TCS.NS": {
+      "test_samples": 369,
+      "directional_accuracy": 43.63,
+      "ci_95": [
+        38.21,
+        48.24
+      ],
+      "f1": 0.6031,
+      "rmse": 0.021062,
+      "mae": 0.014647,
+      "price_mape_percent": 1.47,
+      "toy_backtest": {
+        "strategy_cumulative_return_percent": -33.37,
+        "buy_and_hold_return_percent": -26.79,
+        "fee_per_trade_bps": 5.0
+      }
+    },
+    "INFY.NS": {
+      "test_samples": 369,
+      "directional_accuracy": 46.07,
+      "ci_95": [
+        41.19,
+        51.22
+      ],
+      "f1": 0.6308,
+      "rmse": 0.018357,
+      "mae": 0.013081,
+      "price_mape_percent": 1.31,
+      "toy_backtest": {
+        "strategy_cumulative_return_percent": -23.8,
+        "buy_and_hold_return_percent": -23.8,
+        "fee_per_trade_bps": 5.0
+      }
+    },
+    "HDFCBANK.NS": {
+      "test_samples": 369,
+      "directional_accuracy": 44.72,
+      "ci_95": [
+        39.82,
+        49.74
+      ],
+      "f1": 0.618,
+      "rmse": 0.012826,
+      "mae": 0.009373,
+      "price_mape_percent": 0.94,
+      "toy_backtest": {
+        "strategy_cumulative_return_percent": -27.35,
+        "buy_and_hold_return_percent": -27.35,
+        "fee_per_trade_bps": 5.0
+      }
+    },
+    "HINDUNILVR.NS": {
+      "test_samples": 369,
+      "directional_accuracy": 45.8,
+      "ci_95": [
+        40.92,
+        50.68
+      ],
+      "f1": 0.6283,
+      "rmse": 0.013642,
+      "mae": 0.009893,
+      "price_mape_percent": 0.99,
+      "toy_backtest": {
+        "strategy_cumulative_return_percent": -22.15,
+        "buy_and_hold_return_percent": -22.15,
+        "fee_per_trade_bps": 5.0
+      }
+    },
+    "ITC.NS": {
+      "test_samples": 369,
+      "directional_accuracy": 44.72,
+      "ci_95": [
+        39.42,
+        49.86
+      ],
+      "f1": 0.618,
+      "rmse": 0.013067,
+      "mae": 0.008944,
+      "price_mape_percent": 0.9,
+      "toy_backtest": {
+        "strategy_cumulative_return_percent": -37.27,
+        "buy_and_hold_return_percent": -37.27,
+        "fee_per_trade_bps": 5.0
+      }
+    },
+    "SBIN.NS": {
+      "test_samples": 369,
+      "directional_accuracy": 53.12,
+      "ci_95": [
+        48.24,
+        57.72
+      ],
+      "f1": 0.6938,
+      "rmse": 0.013394,
+      "mae": 0.009435,
+      "price_mape_percent": 0.94,
+      "toy_backtest": {
+        "strategy_cumulative_return_percent": 18.56,
+        "buy_and_hold_return_percent": 18.56,
+        "fee_per_trade_bps": 5.0
+      }
+    },
+    "BHARTIARTL.NS": {
+      "test_samples": 369,
+      "directional_accuracy": 49.86,
+      "ci_95": [
+        43.9,
+        54.34
+      ],
+      "f1": 0.6655,
+      "rmse": 0.012865,
+      "mae": 0.009768,
+      "price_mape_percent": 0.98,
+      "toy_backtest": {
+        "strategy_cumulative_return_percent": 2.82,
+        "buy_and_hold_return_percent": 2.82,
+        "fee_per_trade_bps": 5.0
+      }
+    },
+    "TATAPOWER.NS": {
+      "test_samples": 369,
+      "directional_accuracy": 45.8,
+      "ci_95": [
+        40.92,
+        50.95
+      ],
+      "f1": 0.6283,
+      "rmse": 0.013476,
+      "mae": 0.010288,
+      "price_mape_percent": 1.03,
+      "toy_backtest": {
+        "strategy_cumulative_return_percent": -13.32,
+        "buy_and_hold_return_percent": -13.32,
+        "fee_per_trade_bps": 5.0
+      }
+    },
+    "WIPRO.NS": {
+      "test_samples": 369,
+      "directional_accuracy": 49.32,
+      "ci_95": [
+        44.17,
+        54.74
+      ],
+      "f1": 0.6606,
+      "rmse": 0.015758,
+      "mae": 0.011377,
+      "price_mape_percent": 1.14,
+      "toy_backtest": {
+        "strategy_cumulative_return_percent": -20.56,
+        "buy_and_hold_return_percent": -20.56,
+        "fee_per_trade_bps": 5.0
+      }
+    },
+    "M&M.NS": {
+      "test_samples": 369,
+      "directional_accuracy": 48.24,
+      "ci_95": [
+        43.09,
+        52.85
+      ],
+      "f1": 0.6443,
+      "rmse": 0.019098,
+      "mae": 0.013615,
+      "price_mape_percent": 1.37,
+      "toy_backtest": {
+        "strategy_cumulative_return_percent": 1.18,
+        "buy_and_hold_return_percent": -4.76,
+        "fee_per_trade_bps": 5.0
+      }
+    },
+    "ONGC.NS": {
+      "test_samples": 369,
+      "directional_accuracy": 50.14,
+      "ci_95": [
+        45.12,
+        54.88
+      ],
+      "f1": 0.6679,
+      "rmse": 0.013679,
+      "mae": 0.009729,
+      "price_mape_percent": 0.97,
+      "toy_backtest": {
+        "strategy_cumulative_return_percent": -5.22,
+        "buy_and_hold_return_percent": -5.22,
+        "fee_per_trade_bps": 5.0
+      }
+    }
+  },
+  "symbol_data_summary": {
+    "RELIANCE.NS": {
+      "symbol": "RELIANCE.NS",
+      "rows": 2670,
+      "start_date": "2016-01-01",
+      "end_date": "2026-10-23",
+      "null_count": 0
+    },
+    "TCS.NS": {
+      "symbol": "TCS.NS",
+      "rows": 2670,
+      "start_date": "2016-01-01",
+      "end_date": "2026-10-23",
+      "null_count": 0
+    },
+    "INFY.NS": {
+      "symbol": "INFY.NS",
+      "rows": 2670,
+      "start_date": "2016-01-01",
+      "end_date": "2026-10-23",
+      "null_count": 0
+    },
+    "HDFCBANK.NS": {
+      "symbol": "HDFCBANK.NS",
+      "rows": 2670,
+      "start_date": "2016-01-01",
+      "end_date": "2026-10-23",
+      "null_count": 0
+    },
+    "HINDUNILVR.NS": {
+      "symbol": "HINDUNILVR.NS",
+      "rows": 2670,
+      "start_date": "2016-01-01",
+      "end_date": "2026-10-23",
+      "null_count": 0
+    },
+    "ITC.NS": {
+      "symbol": "ITC.NS",
+      "rows": 2670,
+      "start_date": "2016-01-01",
+      "end_date": "2026-10-23",
+      "null_count": 0
+    },
+    "SBIN.NS": {
+      "symbol": "SBIN.NS",
+      "rows": 2670,
+      "start_date": "2016-01-01",
+      "end_date": "2026-10-23",
+      "null_count": 0
+    },
+    "BHARTIARTL.NS": {
+      "symbol": "BHARTIARTL.NS",
+      "rows": 2670,
+      "start_date": "2016-01-01",
+      "end_date": "2026-10-23",
+      "null_count": 0
+    },
+    "TATAPOWER.NS": {
+      "symbol": "TATAPOWER.NS",
+      "rows": 2670,
+      "start_date": "2016-01-01",
+      "end_date": "2026-10-23",
+      "null_count": 0
+    },
+    "WIPRO.NS": {
+      "symbol": "WIPRO.NS",
+      "rows": 2670,
+      "start_date": "2016-01-01",
+      "end_date": "2026-10-23",
+      "null_count": 0
+    },
+    "M&M.NS": {
+      "symbol": "M&M.NS",
+      "rows": 2670,
+      "start_date": "2016-01-01",
+      "end_date": "2026-10-23",
+      "null_count": 0
+    },
+    "ONGC.NS": {
+      "symbol": "ONGC.NS",
+      "rows": 2670,
+      "start_date": "2016-01-01",
+      "end_date": "2026-10-23",
+      "null_count": 0
+    }
+  }
+}
