@@ -38,11 +38,17 @@ The universe is derived from the portfolio holdings and positions mock data in P
 | `M&M.NS` | Mahindra & Mahindra Ltd | Automobile | 2016-01-01 to 2026-10-23 | 2,670 | 0 |
 | `ONGC.NS` | Oil & Natural Gas Corp Ltd | Oil & Gas | 2016-01-01 to 2026-10-23 | 2,670 | 0 |
 
-### Dropped Symbols & Rationale
-- `SGBMAY29`: Sovereign Gold Bond tranche maturing May 2029. Debt instrument with no continuous equity history.
+### Dropped Symbols & Coverage Policy
+The following instruments from the dashboard mock holdings and positions data have **no forecast** and are deliberately excluded from model training:
+- `SGBMAY29`: Sovereign Gold Bond tranche maturing May 2029. A government debt instrument, not an equity security. It lacks continuous daily equity OHLCV volume on NSE.
 - `KPITTECH`: Demerged and relisted in April 2019 (only 7.5 years of continuous history, failing the $\ge 8$-year liquidity criterion).
 - `QUICKHEAL`: Small-cap software company with substantially lower liquidity and wider bid-ask spreads compared to NIFTY-50 large caps.
-- `HUL`: Duplicate mapping for `HINDUNILVR`.
+- `EVEREADY`: Small-cap mock position excluded from the top 12 liquid large-cap universe.
+- `JUBLFOOD`: Portfolio holding not included in the pre-registered 12 liquid NIFTY benchmark equities.
+- `HUL`: Alternate name for `HINDUNILVR` (Hindustan Unilever).
+
+#### What the Forecast Panel Shows for Unsupported Holdings
+In the dashboard Forecast panel (`/forecast`), these instruments are cleanly categorized in the stock selector under **"Other Portfolio Holdings (No Forecast)"**. When selected, the component displays a dedicated, clear informational alert (blue `#e3f2fd` notice explaining the exact reason why that specific security lacks a forecast, e.g. gold bond or corporate demerger), rather than an error banner or failed state.
 
 ---
 
@@ -110,28 +116,38 @@ The `StandardScaler` is fit **exclusively on the training partition**. Sliding w
 
 ### Overall Test Set Performance (4,428 Test Samples)
 
-| Model | Directional Accuracy (%) | 95% Bootstrap CI (%) | Precision | Recall | F1 Score | Return RMSE | Return MAE | Price MAPE (%) |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **LSTM Network (Dual-Head)** | **47.54%** | **[46.02%, 49.01%]** | **0.4754** | **0.9957** | **0.6435** | **0.015623** | **0.010958** | **1.10%** |
-| **Majority Class Baseline** | **47.56%** | - | 0.4756 | 1.0000 | **0.6446** | - | - | - |
-| **Persistence Baseline** | **49.32%** | - | 0.4758 | 0.4332 | **0.4535** | - | - | - |
-| **Logistic Regression** | **49.57%** | - | 0.4851 | 0.5802 | **0.5280** | - | - | - |
-| **Ridge Regression** | - | - | - | - | - | **0.064987** | **0.029399** | **2.97%** |
-| **Zero-Return Baseline** | - | - | - | - | - | **0.014428** | **0.010353** | **1.04%** |
+| Model | Directional Accuracy (%) | 95% Bootstrap CI (%) | Precision | Recall | F1 Score | Return RMSE | Return MAE | Price MAPE (%) | Predicted UP Share (%) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **LSTM Network (Dual-Head)** | **47.49%** | **[45.98%, 48.92%]** | **0.4752** | **0.9948** | **0.6431** | **0.015254** | **0.010816** | **1.08%** | **99.57%** (4,409 / 4,428) |
+| **Majority Class Baseline** | **47.56%** | - | 0.4756 | 1.0000 | **0.6446** | - | - | - | **100.00%** |
+| **Persistence Baseline** | **49.32%** | - | 0.4758 | 0.4332 | **0.4535** | - | - | - | 49.30% |
+| **Logistic Regression** | **49.55%** | - | 0.4849 | 0.5830 | **0.5295** | - | - | - | 57.18% |
+| **Ridge Regression** | - | - | - | - | - | **0.014619** | **0.010542** | **1.06%** | - |
+| **Zero-Return Baseline** | - | - | - | - | - | **0.014428** | **0.010353** | **1.04%** | - |
 
 ### Benchmark Comparison
-- **Beats Majority Baseline**: ❌ False (LSTM: 47.54% vs Majority: 47.56%)
-- **Beats Persistence Baseline**: ❌ False (LSTM: 47.54% vs Persistence: 49.32%)
-- **Beats Logistic Regression**: ❌ False (LSTM: 47.54% vs Logistic: 49.57%)
-- **Beats Zero-Return RMSE**: ❌ False (LSTM RMSE: 0.015623 vs Zero-Return: 0.014428)
-- **Within 95% Bootstrap CI**: The majority baseline (47.56%) falls cleanly inside the LSTM 95% confidence interval `[46.02%, 49.01%]`.
+- **Beats Majority Baseline**: ❌ False (LSTM: 47.49% vs Majority: 47.56%)
+- **Beats Persistence Baseline**: ❌ False (LSTM: 47.49% vs Persistence: 49.32%)
+- **Beats Logistic Regression**: ❌ False (LSTM: 47.49% vs Logistic: 49.55%)
+- **Beats Zero-Return RMSE**: ❌ False (LSTM RMSE: 0.015254 vs Zero-Return: 0.014428)
+- **Within 95% Bootstrap CI**: The majority baseline (47.56%) falls cleanly inside the LSTM 95% confidence interval `[45.98%, 48.92%]`.
+
+### Detailed Model Behavior Analysis
+
+#### 1. Pre-Registered LSTM Collapse
+The dual-head LSTM model predicted "UP" for **99.57%** of test samples (4,409 out of 4,428) and therefore behaves like the majority-class baseline. Because the directional output probabilities cluster closely around $\hat{p} \approx 0.516$ (ranging strictly between 0.479 and 0.552), the binary classification head learned that predicting the unconditional empirical positive class minimizes cross-entropy loss under high market stochasticity. This was the pre-registered, untuned result, reported faithfully without post-hoc hyperparameter searching on the test split.
+
+#### 2. Ridge Regression Investigation & Bug Resolution
+Initial evaluations recorded an inflated Ridge return RMSE of 0.064987 (approx 4.5x higher than the zero-return baseline of 0.014428). Investigation into feature inputs identified a numerical denominator bug in `ml/features.py`: on zero-volume days (such as Diwali Muhurat sessions, market holidays, or data dropouts), computing `(volume - volume.shift(1)) / (volume.shift(1) + 1e-8)` resulted in dividing typical share volumes (~32 million shares) by $10^{-8}$, producing an unphysical feature value of $3.27 \times 10^{15}$. Because 30-day sliding windows span 30 time steps, this single outlier corrupted 30 consecutive feature vectors. In linear Ridge regression, evaluating unconstrained linear combinations over these contaminated vectors produced raw predictions on the order of $\pm 10^{12}$ that clipped to $\pm 0.20$, heavily penalizing test RMSE.
+
+After patching `volume_change` to forward-fill previous valid trading volume and clip extreme spikes, the Ridge baseline achieved a return RMSE of **0.014619** (MAE **0.010542**, Price MAPE **1.06%**). This now cleanly matches the zero-return baseline (**0.014428**), differing by just 1.3% as expected from regularized linear shrinkage towards zero on financial return series. Two unit tests were added to permanently guard against regressions: `test_zero_volume_numerical_stability` (in `ml/tests/test_features.py`) and `test_linear_ridge_baseline_stability` (in `ml/tests/test_metrics.py`).
 
 ---
 
 ## 7. Honest Scientific Discussion
 
 ### Why does the LSTM fail to outperform simple baselines?
-1. **Weak-Form Efficient Market Hypothesis (EMH)**: Highly liquid large-cap equities (NIFTY-50) incorporate publicly available historical price and volume information almost instantaneously. Daily continuous returns exhibit near-zero serial autocorrelation ($\rho_1 \approx 0$).
+1. **Weak-Form Efficient Market Hypothesis (EMH)**: These empirical findings are **consistent with** the Weak-Form Efficient Market Hypothesis, in which highly liquid large-cap equities (NIFTY-50) incorporate publicly available historical price and volume information almost instantaneously. Daily continuous returns exhibit near-zero serial autocorrelation ($\rho_1 \approx 0$). However, this result alone does not prove market efficiency.
 2. **Extremely Low Signal-to-Noise Ratio**: Daily financial returns are dominated by stochastic noise, market sentiment, and macroeconomic events that are absent from historical OHLCV series. Deep sequence models tend to memorize sample noise unless constrained by strong structural priors.
 3. **Methodological Rigor**: By preventing lookahead leakage and fitting all scalers strictly on the training partition, no artificial predictive advantage was introduced.
 

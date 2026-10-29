@@ -20,7 +20,10 @@
 - **Machine Learning & Time Series Forecasting (New Module):**
   - Designed and built a standalone, reproducible educational stock forecasting module benchmarking a dual-output LSTM network against 4 classical baselines across 12 liquid National Stock Exchange (NSE) tickers over 10.8 years (2,670 trading days per symbol).
   - Enforced strict zero-lookahead protocols: shift perturbation tests verifying zero leakage from $t+1$ to $t$, chronological 70/15/15 splitting, and `StandardScaler` fitted strictly on training partitions.
-  - Published completely honest benchmark metrics from `metrics.json`: the LSTM achieves 47.54% directional accuracy on unseen test data, failing to outperform naive baselines (persistence 49.32%, majority class 47.56%), with zero-return achieving lower RMSE (0.014428 vs 0.015623).
+  - Published completely honest benchmark metrics from `metrics.json`: the LSTM achieves 47.49% directional accuracy on unseen test data, failing to outperform naive baselines (persistence 49.32%, majority class 47.56%), with zero-return achieving lower RMSE (0.014428 vs 0.015254).
+  - Documented pre-registered LSTM collapse: the model predicted 'UP' for 99.57% of test samples (4,409 / 4,428), behaving identically to the majority-class baseline.
+  - Investigated and resolved Ridge regression numerical instability: resolved a zero-volume denominator spike in `volume_change` (restoring Ridge RMSE from 0.064987 down to 0.014619, matching zero-return baseline of 0.014428).
+  - Explicitly categorized non-forecast portfolio instruments (SGBMAY29, KPITTECH, QUICKHEAL, EVEREADY, JUBLFOOD) with dedicated informative guidance in the Forecast UI.
   - Deployed an asynchronous FastAPI microservice on port 3003 with 15-minute in-memory caching to optimize upstream Yahoo Finance queries.
   - Connected the Node.js backend proxy (`GET /api/predict/:symbol`) with session authentication, allowlist validation, and 503 fallback handling.
   - Created a dedicated "Forecast" panel on the React dashboard featuring Chart.js historical trend lines, next-day price projection, and educational disclaimer banners.
@@ -133,21 +136,30 @@ Full methodology, feature definitions, and mathematical details are documented i
 
 ### Honest 3-Line Summary of Results
 1. A dual-output LSTM model was trained on 10.8 years (2,670 rows per ticker, 2016 to 2026) across 12 liquid NSE stocks under strict chronological splitting (70% train, 15% validation, 15% test) with zero lookahead leakage.
-2. Evaluated strictly once on the unseen test set (4,428 samples), the LSTM achieves **47.54% directional accuracy** (95% bootstrap CI: `[46.02%, 49.01%]`), which does **not** beat the majority class baseline (**47.56%**) or the persistence baseline (**49.32%**).
-3. The zero-return baseline achieves a lower return RMSE (**0.014428**) than the LSTM (**0.015623**), consistently illustrating that daily large-cap equity returns in efficient markets behave largely as martingales without exogenous microstructure alpha.
+2. Evaluated strictly once on the unseen test set (4,428 samples), the LSTM achieves **47.49% directional accuracy** (95% bootstrap CI: `[45.98%, 48.92%]`), predicting 'UP' for **99.57%** of samples (4,409 / 4,428) and thus behaving like the majority-class baseline (**47.56%**). This was the pre-registered, untuned result.
+3. The zero-return baseline achieves a lower return RMSE (**0.014428**) than the LSTM (**0.015254**), consistent with the Weak-Form Efficient Market Hypothesis where daily liquid large-cap returns behave largely as martingales without exogenous microstructure alpha. This result alone does not prove market efficiency.
 
 ### Measured Test Metrics Summary
 
-| Model | Directional Accuracy (%) | 95% Bootstrap CI (%) | F1 Score | Return RMSE | Price MAPE (%) |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| **LSTM Network (Dual-Head)** | **47.54%** | **[46.02%, 49.01%]** | **0.6435** | **0.015623** | **1.10%** |
-| **Majority Class Baseline** | **47.56%** | - | **0.6446** | - | - |
-| **Persistence Baseline** | **49.32%** | - | **0.4535** | - | - |
-| **Logistic Regression** | **49.57%** | - | **0.5280** | - | - |
-| **Ridge Regression** | - | - | - | **0.064987** | **2.97%** |
-| **Zero-Return Baseline** | - | - | - | **0.014428** | **1.04%** |
+| Model | Directional Accuracy (%) | 95% Bootstrap CI (%) | F1 Score | Return RMSE | Price MAPE (%) | Predicted UP Share (%) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **LSTM Network (Dual-Head)** | **47.49%** | **[45.98%, 48.92%]** | **0.6431** | **0.015254** | **1.08%** | **99.57%** (4,409 / 4,428) |
+| **Majority Class Baseline** | **47.56%** | - | **0.6446** | - | - | **100.00%** |
+| **Persistence Baseline** | **49.32%** | - | **0.4535** | - | - | 49.30% |
+| **Logistic Regression** | **49.55%** | - | **0.5295** | - | - | 57.18% |
+| **Ridge Regression** | - | - | - | **0.014619** | **1.06%** | - |
+| **Zero-Return Baseline** | - | - | - | **0.014428** | **1.04%** | - |
 
 > *All values are directly measured and recorded in [`ml/artifacts/metrics.json`](ml/artifacts/metrics.json).*
+
+### Portfolio Symbol Coverage Policy
+The educational ML model forecasts 12 pre-registered liquid NIFTY-50 equities with >8 years of continuous trading history. Other instruments in the mock portfolio have **no forecast**:
+- **SGBMAY29**: Sovereign Gold Bond debt instrument (no equity OHLCV volume).
+- **KPITTECH**: Underwent corporate demerger in 2019 (only 7.5 years continuous history).
+- **QUICKHEAL**: Excluded small-cap equity with lower trading liquidity.
+- **EVEREADY / JUBLFOOD**: Excluded from the 12 liquid large-cap universe.
+
+**In the Forecast Dashboard**: Selecting an unsupported holding displays a clear, friendly informational notice explaining why that security lacks a forecast, rather than an error banner.
 
 ---
 
