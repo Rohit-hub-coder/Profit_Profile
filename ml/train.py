@@ -166,6 +166,8 @@ def train_and_evaluate() -> Dict[str, Any]:
     lstm_prob = lstm_prob.ravel()
     lstm_ret = lstm_ret.ravel()
     lstm_pred_dir = (lstm_prob >= 0.5).astype(np.int32)
+    lstm_up_count = int(np.sum(lstm_pred_dir == 1))
+    lstm_up_share = round(float(lstm_up_count / n_test * 100.0), 2)
 
     # Baselines Test predictions
     maj_preds, maj_probs = maj_baseline.predict(n_test)
@@ -260,6 +262,8 @@ def train_and_evaluate() -> Dict[str, Any]:
                 "rmse": round(lstm_ret_metrics["rmse"], 6),
                 "mae": round(lstm_ret_metrics["mae"], 6),
                 "price_mape_percent": round(lstm_ret_metrics["price_mape_percent"], 2),
+                "up_prediction_count": lstm_up_count,
+                "up_prediction_share_percent": lstm_up_share,
             },
             "baselines": {
                 "majority_class": {

@@ -86,8 +86,9 @@ def compute_features(df: pd.DataFrame) -> pd.DataFrame:
     data["macd_signal"] = signal_line
     data["macd_hist"] = hist
 
-    # 6. Volume change
-    data["volume_change"] = (volume - volume.shift(1)) / (volume.shift(1) + 1e-8)
+    # 6. Volume change: safe percentage change handling zero-volume sessions and clipping extreme outliers
+    prev_vol = volume.shift(1).replace(0, np.nan).ffill().fillna(1.0)
+    data["volume_change"] = ((volume - prev_vol) / prev_vol).fillna(0.0).clip(-10.0, 10.0)
 
     # 7. Volatility (20-day rolling standard deviation of simple returns)
     simple_ret = close.pct_change()
